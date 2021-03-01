@@ -157,32 +157,36 @@ void thread_fn(enum thread_type type, int thread_index,
 	long buffer_len_mask = (1 << buffer_len_shift) - 1;
 
 	long cur_num_op = 0;
+	long batch_index = 0;
+	long random_seed = thread_index;
 	chrono::time_point<chrono::steady_clock> start_time = chrono::steady_clock::now();
 	while (!atomic_load(terminate) && cur_num_op < num_op) {
 		switch (type) {
 		case RANDOM_READ:
-			random_read_batch(buffer, thread_index, buffer_len_mask, batch_size);
+			random_read_batch(buffer, random_seed % num_entry, buffer_len_mask, batch_size);
 			break;
 		case RANDOM_WRITE:
-			random_write_batch(buffer, thread_index, buffer_len_mask, batch_size);
+			random_write_batch(buffer, random_seed % num_entry, buffer_len_mask, batch_size);
 			break;
 		case RANDOM_READ_WRITE:
-			random_read_write_batch(buffer, thread_index, buffer_len_mask, batch_size);
+			random_read_write_batch(buffer, random_seed % num_entry, buffer_len_mask, batch_size);
 			break;
 		case SEQ_READ:
-			seq_read_batch(buffer, 0, buffer_len_mask, batch_size);
+			seq_read_batch(buffer, (batch_size * batch_index) % num_entry, buffer_len_mask, batch_size);
 			break;
 		case SEQ_WRITE:
-			seq_write_batch(buffer, 0, buffer_len_mask, batch_size);
+			seq_write_batch(buffer, (batch_size * batch_index) % num_entry, buffer_len_mask, batch_size);
 			break;
 		case SEQ_READ_WRITE:
-			seq_read_write_batch(buffer, 0, buffer_len_mask, batch_size);
+			seq_read_write_batch(buffer, (batch_size * batch_index) % num_entry, buffer_len_mask, batch_size);
 			break;
 		default:
 			printf("Error: unrecognized op type\n");
 			exit(1);
 		}
 		cur_num_op += batch_size;
+		++batch_index;
+		random_seed = (random_seed * 1103515245) + 54321;
 	}
 	chrono::time_point<chrono::steady_clock> end_time = chrono::steady_clock::now();
 	atomic_store(terminate, true);
