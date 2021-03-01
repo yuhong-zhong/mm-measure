@@ -158,7 +158,7 @@ void thread_fn(enum thread_type type, int thread_index,
 
 	long cur_num_op = 0;
 	long batch_index = 0;
-	long random_seed = thread_index;
+	unsigned long random_seed = thread_index;
 	chrono::time_point<chrono::steady_clock> start_time = chrono::steady_clock::now();
 	while (!atomic_load(terminate) && cur_num_op < num_op) {
 		switch (type) {
