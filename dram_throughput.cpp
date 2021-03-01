@@ -9,123 +9,126 @@
 using namespace std;
 
 
-void random_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+inline void random_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
 	              "MOVQ %[buffer_len_mask], %%r12\n"   /* r12: long buffer_len_mask */
-	              "loop:\n"
+	              "loop%=:\n"
 	              "MOVQ (%%r15, %%r14, 8), %%rbx\n"    /* read from memory */
 	              "MOVQ %%r14, %%rax\n"                /* randomly generate next position */
-	              "MULQ $1103515245\n"
+	              "MOVQ $1103515245, %%rcx\n"
+	              "MULQ %%rcx\n"
 	              "ADDQ $12345, %%rax\n"
 	              "ANDQ %%r12, %%rax\n"
 	              "MOVQ %%rax, %%r14\n"
 	              "DECQ %%r13\n"
-	              "JNZ loop\n"
+	              "JNZ loop%=\n"
 	:
 	: [buffer] "r" (buffer), [start_index] "r" (start_index), 
 	  [buffer_len_mask] "r" (buffer_len_mask), [batch_size] "r" (batch_size)
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-void random_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+inline void random_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
 	              "MOVQ %[buffer_len_mask], %%r12\n"   /* r12: long buffer_len_mask */
-	              "loop:\n"
+	              "loop%=:\n"
 	              "MOVQ %%rbx, (%%r15, %%r14, 8)\n"    /* write to memory */
 	              "MOVQ %%r14, %%rax\n"                /* randomly generate next position */
-	              "MULQ $1103515245\n"
+	              "MOVQ $1103515245, %%rcx\n"
+	              "MULQ %%rcx\n"
 	              "ADDQ $12345, %%rax\n"
 	              "ANDQ %%r12, %%rax\n"
 	              "MOVQ %%rax, %%r14\n"
 	              "DECQ %%r13\n"
-	              "JNZ loop\n"
+	              "JNZ loop%=\n"
 	:
 	: [buffer] "r" (buffer), [start_index] "r" (start_index), 
 	  [buffer_len_mask] "r" (buffer_len_mask), [batch_size] "r" (batch_size)
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-void random_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+inline void random_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
 	              "MOVQ %[buffer_len_mask], %%r12\n"   /* r12: long buffer_len_mask */
-	              "loop:\n"
-		      "TESTQ $1, %%r13\n"                  /* decide read or write */
-		      "JNZ write\n"
-		      "MOVQ (%%r15, %%r14, 8), %%rbx\n"    /* read from memory */
-		      "JMP loop_end\n"
-		      "write:\n"
+	              "loop%=:\n"
+	              "TESTQ $1, %%r13\n"                  /* decide read or write */
+	              "JNZ write%=\n"
+	              "MOVQ (%%r15, %%r14, 8), %%rbx\n"    /* read from memory */
+	              "JMP loop_end%=\n"
+	              "write%=:\n"
 	              "MOVQ %%rbx, (%%r15, %%r14, 8)\n"    /* write to memory */
-		      "loop_end:\n"
+	              "loop_end%=:\n"
 	              "MOVQ %%r14, %%rax\n"                /* randomly generate next position */
-	              "MULQ $1103515245\n"
+	              "MOVQ $1103515245, %%rcx\n"
+	              "MULQ %%rcx\n"
 	              "ADDQ $12345, %%rax\n"
 	              "ANDQ %%r12, %%rax\n"
 	              "MOVQ %%rax, %%r14\n"
 	              "DECQ %%r13\n"
-	              "JNZ loop\n"
+	              "JNZ loop%=\n"
 	:
 	: [buffer] "r" (buffer), [start_index] "r" (start_index), 
 	  [buffer_len_mask] "r" (buffer_len_mask), [batch_size] "r" (batch_size)
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-void seq_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+inline void seq_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
 	              "MOVQ %[buffer_len_mask], %%r12\n"   /* r12: long buffer_len_mask */
-	              "loop:\n"
+	              "loop%=:\n"
 	              "MOVQ (%%r15, %%r14, 8), %%rbx\n"    /* read from memory */
 	              "INCQ %%r14\n"                       /* get next offset */
 	              "ANDQ %%r12, %%r14\n"
 	              "DECQ %%r13\n"
-	              "JNZ loop\n"
+	              "JNZ loop%=\n"
 	:
 	: [buffer] "r" (buffer), [start_index] "r" (start_index), 
 	  [buffer_len_mask] "r" (buffer_len_mask), [batch_size] "r" (batch_size)
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-void seq_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+inline void seq_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
 	              "MOVQ %[buffer_len_mask], %%r12\n"   /* r12: long buffer_len_mask */
-	              "loop:\n"
+	              "loop%=:\n"
 	              "MOVQ %%rbx, (%%r15, %%r14, 8)\n"    /* write to memory */
-		      "INCQ %%r14\n"                       /* get next offset */
+	              "INCQ %%r14\n"                       /* get next offset */
 	              "ANDQ %%r12, %%r14\n"
 	              "DECQ %%r13\n"
-	              "JNZ loop\n"
+	              "JNZ loop%=\n"
 	:
 	: [buffer] "r" (buffer), [start_index] "r" (start_index), 
 	  [buffer_len_mask] "r" (buffer_len_mask), [batch_size] "r" (batch_size)
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-void seq_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+inline void seq_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
 	              "MOVQ %[buffer_len_mask], %%r12\n"   /* r12: long buffer_len_mask */
-	              "loop:\n"
-		      "TESTQ $1, %%r13\n"                  /* decide read or write */
-		      "JNZ write\n"
-		      "MOVQ (%%r15, %%r14, 8), %%rbx\n"    /* read from memory */
-		      "JMP loop_end\n"
-		      "write:\n"
+	              "loop%=:\n"
+	              "TESTQ $1, %%r13\n"                  /* decide read or write */
+	              "JNZ write%=\n"
+	              "MOVQ (%%r15, %%r14, 8), %%rbx\n"    /* read from memory */
+	              "JMP loop_end%=\n"
+	              "write%=:\n"
 	              "MOVQ %%rbx, (%%r15, %%r14, 8)\n"    /* write to memory */
-		      "loop_end:\n"
-		      "INCQ %%r14\n"                       /* get next offset */
+	              "loop_end%=:\n"
+	              "INCQ %%r14\n"                       /* get next offset */
 	              "ANDQ %%r12, %%r14\n"
 	              "DECQ %%r13\n"
-	              "JNZ loop\n"
+	              "JNZ loop%=\n"
 	:
 	: [buffer] "r" (buffer), [start_index] "r" (start_index), 
 	  [buffer_len_mask] "r" (buffer_len_mask), [batch_size] "r" (batch_size)
