@@ -9,7 +9,7 @@
 using namespace std;
 
 
-inline void random_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+void random_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
@@ -29,7 +29,7 @@ inline void random_read_batch(long *buffer, long start_index, long buffer_len_ma
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-inline void random_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+void random_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
@@ -49,7 +49,7 @@ inline void random_write_batch(long *buffer, long start_index, long buffer_len_m
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-inline void random_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+void random_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
@@ -75,7 +75,7 @@ inline void random_read_write_batch(long *buffer, long start_index, long buffer_
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-inline void seq_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+void seq_read_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
@@ -92,7 +92,7 @@ inline void seq_read_batch(long *buffer, long start_index, long buffer_len_mask,
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-inline void seq_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+void seq_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
@@ -109,7 +109,7 @@ inline void seq_write_batch(long *buffer, long start_index, long buffer_len_mask
 	: "%rax", "%rbx", "%rcx", "%rdx", "%r12", "%r13", "%r14", "%r15");
 }
 
-inline void seq_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
+void seq_read_write_batch(long *buffer, long start_index, long buffer_len_mask, long batch_size) {
 	asm volatile ("MOVQ %[buffer], %%r15\n"            /* r15: long *buffer */
 	              "MOVQ %[start_index], %%r14\n"       /* r14: size_t offset */
 	              "MOVQ %[batch_size], %%r13\n"        /* r13: size_t remain */
